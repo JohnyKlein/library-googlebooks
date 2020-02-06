@@ -12,41 +12,19 @@
 <div class="row" style="padding:30px">
     <div class="col-md-12" style="padding:10px">
         <h1>Busca por: <label th:utext="${nameSearch}"></label></h1>
-        <!--<h1><label th:utext="${googleAPI.items[0].kind}"></label></h1>-->
     </div>
-    <div class="col-md-4">
-        <div class="thumbnail">
-            <a href="#">
-                <img src="https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
-                     alt="Lights" style="width:100%">
+    <th:block th:each="book : ${books}">
+        <div class="col-md-4 text-center">
+            <div class="thumbnail">
+                <img th:src="${book.thumbnail}" alt="Book's image">
                 <div class="caption">
-                    <p th:utext="${titles[0]}"></p>
+                    <h5 th:utext="${book.title}"></h5>
+                    <h6>Descrição</h6>
+                    <p class="text-left" th:utext="${book.description}"></p>
                 </div>
-            </a>
+            </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="thumbnail">
-            <a href="#">
-                <img src="https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
-                     alt="Lights" style="width:100%">
-                <div class="caption">
-                    <p th:utext="${titles[1]}"></p>
-                </div>
-            </a>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="thumbnail">
-            <a href="#">
-                <img src="https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
-                     alt="Lights" style="width:100%">
-                <div class="caption">
-                    <p th:utext="${titles[2]}"></p>
-                </div>
-            </a>
-        </div>
-    </div>
+    </th:block>
 </div>
 </body>
 
