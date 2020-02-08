@@ -44,14 +44,33 @@
     last: 'Último',
     onPageClick: function (event, page) {
         //fetch content and render here
-        let books = getBooksObjs();
-        let htmlContent = getHtmlByBooks(books);
-        $('#page-content').html(htmlContent);
+        let indexSearch = (page-1) + "0";
+        getBooksObjs(indexSearch);
     }
   });
 
-  function getBooksObjs() {
-    return /*[[${books}]]*/ [];
+  function getBooksObjs(indexSearch) {
+    if (indexSearch === "00") {
+      booksObjs = /*[[${books}]]*/ []
+      let htmlContent = getHtmlByBooks(booksObjs);
+      $('#page-content').html(htmlContent);
+    } else {
+      getOtherBooks(indexSearch);
+    }
+  }
+
+  function getOtherBooks(indexSearch) {
+    let name = 'harry';
+    getBooksByNameAndIndex(indexSearch, name);
+  }
+
+  function getBooksByNameAndIndex(indexSearch, name) {
+    let host =  /*[[${serverAddress}]]*/ '';
+    let fullUrl = `http://${host}/books-by-index?name=${name}&index=${indexSearch}`;
+    $.get(fullUrl, function(data) {
+      let htmlContent = getHtmlByBooks(data);
+      $('#page-content').html(htmlContent);
+    });
   }
 
   function getHtmlByBooks(books) {
