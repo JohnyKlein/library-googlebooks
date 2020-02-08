@@ -21,7 +21,7 @@ public class LibraryController {
 
     @GetMapping("/books")
     public String listBooks(@RequestParam(name="nameSearch") String nameSearch, Model model) {
-        String fullAddress = "https://www.googleapis.com/books/v1/volumes?q=" + nameSearch;
+        String fullAddress = "https://www.googleapis.com/books/v1/volumes?maxResults=40&q=" + nameSearch;
         JSONObject response = getResponse(fullAddress);
         List<Book> books = Book.getBooksByResponse(response);
         model.addAttribute("nameSearch", nameSearch);

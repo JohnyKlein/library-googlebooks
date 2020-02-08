@@ -1,0 +1,30 @@
+.main {
+  margin: 10px auto;
+  text-align: center;
+}
+
+#pagination-demo {
+  display: inline-block;
+  margin-bottom: 1.75em;
+}
+
+#pagination-demo li{
+  display: inline-block;
+}
+
+.page-content {
+  background: #eee;
+  display: inline-block;
+  padding: 10px;
+  width: 100%;
+}
+
+p {
+  word-break: break-all;
+  text-transform: lowercase;
+}
+
+.item-gallery {
+  height: 350px;
+  overflow: auto;
+}

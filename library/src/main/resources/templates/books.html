@@ -1,37 +1,99 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" >
 <head>
-    <meta charset="UTF-8">
-    <title>Google Books Application</title>
-    <link rel="stylesheet" type="text/css"
-          href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css"
-          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <meta charset="UTF-8">
+  <title>Google Books Application</title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css'>
+  <link rel="stylesheet" href="books.css">
 </head>
 <body>
-<div class="row" style="padding:30px">
-    <div class="col-md-12" style="padding:10px">
+
+<!-- partial:index.partial.html -->
+<div class="main">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-12">
         <h1>Busca por: <label th:utext="${nameSearch}"></label></h1>
+        <label>Total de resultados: 0</label>
+      </div>
     </div>
-    <th:block th:each="book : ${books}">
-        <div class="col-md-4 text-center">
-            <div class="thumbnail">
-                <img th:src="${book.thumbnail}" alt="Book's image">
-                <div class="caption">
-                    <h5 th:utext="${book.title}"></h5>
-                    <h6>Descrição</h6>
-                    <p class="text-left" th:utext="${book.description}"></p>
-                </div>
+    <div class="page-content">
+      <div class="col-md-12" id="page-content">
+        <!-- Dinamic Content Here -->
+      </div>
+    </div>
+  </div>
+</div>
+<div class="main">
+  <ul id="pagination-demo" class="pagination-sm"></ul>
+</div>
+
+<!-- partial -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+<script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+<script src="https://npmcdn.com/bootstrap@4.0.0-alpha.5/dist/js/bootstrap.min.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/twbs-pagination/1.4.1/jquery.twbsPagination.min.js'></script>
+<script th:inline="javascript">
+/*<![CDATA[*/
+  $('#pagination-demo').twbsPagination({
+    totalPages: 6,
+    visiblePages: 6,
+    next: 'Próximo',
+    prev: 'Anterior',
+    first: 'Primeiro',
+    last: 'Último',
+    onPageClick: function (event, page) {
+        //fetch content and render here
+        let books = getBooksObjs();
+        let htmlContent = getHtmlByBooks(books);
+        $('#page-content').html(htmlContent);
+    }
+  });
+
+  function getBooksObjs() {
+    return /*[[${books}]]*/ [];
+  }
+
+  function getHtmlByBooks(books) {
+    let html =
+     `<div class="container">
+          <div class="row">`;
+            books.forEach(function(book) {
+              html += getHtml(book);
+            });
+     html +=
+          `</div>
+     </div>`;
+
+    return html;
+  }
+
+  function getHtml(book) {
+    let description = getDescription(book.description);
+    return `
+    <div class="col-4 item-gallery">
+        <div class="thumbnail">
+            <img src="${book.thumbnail}">
+            <div class="caption">
+                <h5>${book.title}</h5>
+                ${description}
             </div>
         </div>
-    </th:block>
-</div>
+    </div>`;
+  }
+
+  function getDescription(description) {
+    if (description) {
+      return `<div class="col-12 text-left">
+        <h6>Descrição:</h6>
+        <p>${description}</p>
+      </div>`;
+    }
+    return '';
+  }
+
+/*]]>*/
+</script>
+
 </body>
-
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-        integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8="
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
-
 </html>
