@@ -18,7 +18,8 @@ import java.util.List;
 @Controller
 public class LibraryController {
 
-    private static final String URL_BASE = "https://www.googleapis.com/books/v1/volumes?maxResults=10&q=";
+    private static final String URL_BASE_DELIMITADOR = "https://www.googleapis.com/books/v1/volumes?maxResults=10&q=";
+    private static final String URL_BASE = "https://www.googleapis.com/books/v1/volumes?q=";
 
     @Autowired
     private Environment environment;
@@ -30,14 +31,23 @@ public class LibraryController {
 
     @GetMapping("/books")
     public String listBooksByName(@RequestParam(name="name") String name, Model model) {
-        String fullAddress = URL_BASE + name;
+        String fullAddress = URL_BASE_DELIMITADOR + name;
         JSONObject response = getResponse(fullAddress);
         List<Book> books = Book.getBooksByResponse(response);
         model.addAttribute("name", name);
+        model.addAttribute("totalSearch", getTotalSearch(name));
         model.addAttribute("books", books);
         model.addAttribute("serverAddress", getHostAndPort());
 
         return "books";
+    }
+
+    private Integer getTotalSearch(String name) {
+        String fullAddress = URL_BASE + name;
+        JSONObject response = getResponse(fullAddress);
+        Integer totalItems = (Integer) response.toMap().get("totalItems");
+
+        return totalItems;
     }
 
     @GetMapping("/books-by-index")
@@ -45,7 +55,7 @@ public class LibraryController {
     @ResponseBody
     public List<Book> listBooksByNameAndIndex(@RequestParam(name="name") String name,
                                               @RequestParam(name="index") String index) {
-        String fullAddress = URL_BASE + name + "&startIndex=" + index;
+        String fullAddress = URL_BASE_DELIMITADOR + name + "&startIndex=" + index;
         JSONObject response = getResponse(fullAddress);
         List<Book> books = Book.getBooksByResponse(response);
 

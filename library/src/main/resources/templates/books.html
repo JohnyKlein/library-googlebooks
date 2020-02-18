@@ -13,8 +13,9 @@
   <div class="container">
     <div class="row">
       <div class="col-sm-12">
-        <h1>Busca por: <label th:utext="${nameSearch}"></label></h1>
-        <label>Total de resultados: 0</label>
+        <h1>Busca por: <label id="nameSearch" th:utext="${name}"></label></h1>
+        <label>Total de resultados: </label>
+        <label th:utext="${totalSearch}"></label>
       </div>
     </div>
     <div class="page-content">
@@ -60,7 +61,7 @@
   }
 
   function getOtherBooks(indexSearch) {
-    let name = 'harry';
+    let name = $("#nameSearch").html();
     getBooksByNameAndIndex(indexSearch, name);
   }
 
@@ -88,12 +89,13 @@
   }
 
   function getHtml(book) {
-    let description = getDescription(book.description);
+    let description = getDescriptionHtml(book.description);
+
     return `
-    <div class="col-4 item-gallery">
+    <div class="col-4 item-gallery" style="margin-bottom: 35px;">
         <div class="thumbnail">
             <img src="${book.thumbnail}">
-            <div class="caption">
+            <div class="caption" style="margin: 5px;">
                 <h5>${book.title}</h5>
                 ${description}
             </div>
@@ -101,14 +103,21 @@
     </div>`;
   }
 
-  function getDescription(description) {
+  function getDescriptionHtml(description) {
+    description = capitalize(description);
+
     if (description) {
-      return `<div class="col-12 text-left">
+      return `<div class="col-12 text-left" style="padding:20px;">
         <h6>Descrição:</h6>
         <p>${description}</p>
       </div>`;
     }
     return '';
+  }
+
+  function capitalize(s) {
+    if (typeof s !== 'string') return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
 /*]]>*/
