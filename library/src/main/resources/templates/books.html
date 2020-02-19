@@ -13,7 +13,11 @@
   <div class="container">
     <div class="row">
       <div class="col-sm-12">
-        <h1>Busca por: <label id="nameSearch" th:utext="${name}"></label></h1>
+        <h1>
+          <label>Busca por: </label>
+          <input id="nameSearch"/>
+          <input id="btn-search" type="submit" value="buscar">
+        </h1>
         <label>Total de resultados: </label>
         <label th:utext="${totalSearch}"></label>
       </div>
@@ -25,6 +29,8 @@
     </div>
   </div>
 </div>
+
+<!-- pages -->
 <div class="main">
   <ul id="pagination-demo" class="pagination-sm"></ul>
 </div>
@@ -61,7 +67,7 @@
   }
 
   function getOtherBooks(indexSearch) {
-    let name = $("#nameSearch").html();
+    let name = $('#nameSearch').val();
     getBooksByNameAndIndex(indexSearch, name);
   }
 
@@ -93,6 +99,7 @@
 
     return `
     <div class="col-4 item-gallery" style="margin-bottom: 35px;">
+        <a href="#">ADD FAVORITE</a>
         <div class="thumbnail">
             <img src="${book.thumbnail}">
             <div class="caption" style="margin: 5px;">
@@ -119,6 +126,12 @@
     if (typeof s !== 'string') return '';
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
+
+  $('#btn-search').click(function(item){
+    let name = $('#nameSearch').val();
+    getBooksByNameAndIndex(10, name);
+  });
+
 
 /*]]>*/
 </script>

@@ -17,7 +17,6 @@ import java.util.List;
 
 @Controller
 public class LibraryController {
-
     private static final String URL_BASE_DELIMITADOR = "https://www.googleapis.com/books/v1/volumes?maxResults=10&q=";
     private static final String URL_BASE = "https://www.googleapis.com/books/v1/volumes?q=";
 
@@ -30,7 +29,8 @@ public class LibraryController {
     }
 
     @GetMapping("/books")
-    public String listBooksByName(@RequestParam(name="name") String name, Model model) {
+    public String listBooksByName(Model model) {
+        String name = "";
         String fullAddress = URL_BASE_DELIMITADOR + name;
         JSONObject response = getResponse(fullAddress);
         List<Book> books = Book.getBooksByResponse(response);

@@ -52,16 +52,18 @@ public class Book {
         List<Book> books = new ArrayList<>();
         List<HashMap<String, Object>> items = (List<HashMap<String, Object>>) response.toMap().get("items");
 
-        items.forEach(item -> {
-            HashMap<String, Object> volume = (HashMap<String, Object>) item.get("volumeInfo");
-            String title = (String) volume.get("title");
-            List<String> authors = (List<String>) volume.get("author");
-            String publisher = (String) volume.get("publisher");
-            String publishedDate = (String) volume.get("publishedDate");
-            String description = (String) volume.get("description");
-            String thumbnail = (String) ((HashMap<String, Object>) volume.get("imageLinks")).get("thumbnail");
-            books.add(new Book(title, authors, publisher, publishedDate, description, thumbnail));
-        });
+        if (items != null) {
+            items.forEach(item -> {
+                HashMap<String, Object> volume = (HashMap<String, Object>) item.get("volumeInfo");
+                String title = (String) volume.get("title");
+                List<String> authors = (List<String>) volume.get("author");
+                String publisher = (String) volume.get("publisher");
+                String publishedDate = (String) volume.get("publishedDate");
+                String description = (String) volume.get("description");
+                String thumbnail = (String) ((HashMap<String, Object>) volume.get("imageLinks")).get("thumbnail");
+                books.add(new Book(title, authors, publisher, publishedDate, description, thumbnail));
+            });
+        }
 
         return books;
     }

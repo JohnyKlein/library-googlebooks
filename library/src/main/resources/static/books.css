@@ -27,3 +27,7 @@ p {
   height: 350px;
   overflow: auto;
 }
+
+#btn-search {
+    font-size: 22px;
+}
