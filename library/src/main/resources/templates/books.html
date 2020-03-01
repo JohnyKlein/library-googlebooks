@@ -51,21 +51,16 @@
     last: 'Último',
     onPageClick: function (event, page) {
         //fetch content and render here
-        let indexSearch = (page-1) + "0";
+        let indexSearch = getIdxSearchByPage(page);
         getBooksObjs(indexSearch);
     }
   });
 
   function getBooksObjs(indexSearch) {
-    if (indexSearch === "00") {
-      booksObjs = /*[[${books}]]*/ []
-      let htmlContent = getHtmlByBooks(booksObjs);
-      $('#page-content').html(htmlContent);
-    } else {
       getOtherBooks(indexSearch);
-    }
   }
 
+//TODO - refactor
   function getOtherBooks(indexSearch) {
     let name = $('#nameSearch').val();
     getBooksByNameAndIndex(indexSearch, name);
@@ -127,10 +122,16 @@
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  $('#btn-search').click(function(item){
+  $('#btn-search').click(function(item) {
+    let page = $('.active a').html();
+    let idxSearch = getIdxSearchByPage(page);
     let name = $('#nameSearch').val();
-    getBooksByNameAndIndex(10, name);
+    getBooksByNameAndIndex(idxSearch, name);
   });
+
+  function getIdxSearchByPage(page) {
+    return (page-1) + "0";
+  }
 
 
 /*]]>*/
