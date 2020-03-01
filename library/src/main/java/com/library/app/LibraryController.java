@@ -30,13 +30,6 @@ public class LibraryController {
 
     @GetMapping("/books")
     public String listBooksByName(Model model) {
-        String name = "";
-        String fullAddress = URL_BASE_DELIMITADOR + name;
-        JSONObject response = getResponse(fullAddress);
-        List<Book> books = Book.getBooksByResponse(response);
-        model.addAttribute("name", name);
-        model.addAttribute("totalSearch", getTotalSearch(name));
-        model.addAttribute("books", books);
         model.addAttribute("serverAddress", getHostAndPort());
 
         return "books";
