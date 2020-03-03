@@ -12,14 +12,16 @@
 <div class="main">
   <div class="container">
     <div class="row">
+      <div class="col-sm-8">
+        <label>Busca por: </label>
+        <input id="nameSearch" style="height: 100%; width: 650px;">
+      </div>
+      <div class="col-sm-4" style=" text-align: left;">
+        <input id="btn-search" type="submit" value="buscar" style="height: 50px;">
+      </div>
       <div class="col-sm-12">
-        <h1>
-          <label>Busca por: </label>
-          <input id="nameSearch"/>
-          <input id="btn-search" type="submit" value="buscar">
-        </h1>
         <label>Total de resultados: </label>
-        <label th:utext="${totalSearch}"></label>
+        <label></label>
       </div>
     </div>
     <div class="page-content">
