@@ -1,4 +1,4 @@
-package com.library.app.request;
+package com.library.app.utils;
 
 import org.json.JSONObject;
 
@@ -10,7 +10,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
-public class DoRequest {
+public class Request {
 
     public static JSONObject getRequest(String path) {
         String jsonResponse = null;

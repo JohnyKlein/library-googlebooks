@@ -9,32 +9,28 @@
     <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </head>
 <body>
-
 <div class="container">
     <div class="row">
         <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
             <div class="card card-signin my-5">
                 <div class="card-body">
                     <h5 class="card-title text-center">Entrar</h5>
-                    <form class="form-signin">
+                    <div class="form-signin">
                         <div class="form-label-group">
-                            <input type="email" id="inputEmail" class="form-control" placeholder="Email address"
-                                   required autofocus>
+                            <input type="email" id="inputEmail" class="form-control" placeholder="endereço de e-mail" required autofocus>
                             <label for="inputEmail">Endereço de e-mail</label>
                         </div>
-
                         <div class="form-label-group">
-                            <input type="password" id="inputPassword" class="form-control" placeholder="Password"
-                                   required>
+                            <input type="password" id="inputPassword" class="form-control" placeholder="senha" required>
                             <label for="inputPassword">Senha</label>
                         </div>
-
-                        <button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit">Sign in</button>
+                        <button id="inputSignIn" class="btn btn-lg btn-primary btn-block text-uppercase" type="submit">Entrar</button>
                         <hr class="my-4">
-                        <button class="btn btn-lg btn-google btn-block text-uppercase" type="submit"><i
-                                class="fab fa-google mr-2"></i> Sign in with Google
+                        <button class="btn btn-lg btn-google btn-block text-uppercase" type="submit">
+                            <i class="fab fa-google mr-2"></i>
+                            Sign in with Google
                         </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -45,34 +41,69 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
 
-//Firebase
+<!--Firebase-->
 <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
-<script src="./init-firebase.js"></script>
 
+<!-- Events -->
 <script>
-  var token = 'eyJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJodHRwczovL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbS9nb29nbGUuaWRlbnRpdHkuaWRlbnRpdHl0b29sa2l0LnYxLklkZW50aXR5VG9vbGtpdCIsImV4cCI6MTU4MzI5MDQ1NSwiaWF0IjoxNTgzMjg2ODU1LCJpc3MiOiJmaXJlYmFzZS1hZG1pbnNkay1oangxckBsaWJyYXJ5LWdib29rcy5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6ImZpcmViYXNlLWFkbWluc2RrLWhqeDFyQGxpYnJhcnktZ2Jvb2tzLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwidWlkIjoic212SUdNSW5NZ1hXMXlhQmNDVUdsSDJoS1lKMiJ9.DBerTYsiGs0RIOnLfOBqCVxn6fvjPBru3yExlsHa9AKaZBIQIXJDpVGaLuXKcnWNcWeOtf1oJHsWWkagJI-ANjJ98ATceN7MT1b-f3rzYe1bN1H8wmRhNaK3MDfBQM-KFteXTi-gBkwoXMLptNdOPcXFCC5C98eXIf5VjgUdy7JqbeBWU7ln6lowzgnCD4v8QmrOmpKvnU87b0rbLZuiZuD37aRXcM7Stjm1y1ED7VZjoFh8tgbhEs2O_YGrLRWVrUmV-9B69n5VC36xaxSnmBwvbrt0IjFYYKqVXNCXMUOawrqVEi0UdoQf8jVjhQX3SH65gQzPcXzTj-g6TFtwTA';
-
-  var firebaseConfig = {
-    apiKey: "AIzaSyABu9fd5I932JN68EjxPlcAAtsljoFQbSg",
-    authDomain: "library-gbooks.firebaseapp.com",
-    databaseURL: "https://library-gbooks.firebaseio.com",
-    projectId: "library-gbooks",
-    storageBucket: "library-gbooks.appspot.com",
-    messagingSenderId: "711620461645",
-    appId: "1:711620461645:web:30960c1528e1d23b018804",
-    measurementId: "G-4764X2PMJ0"
-  };
-
     // Initialize Firebase
+    var firebaseConfig = {
+        apiKey: "AIzaSyABu9fd5I932JN68EjxPlcAAtsljoFQbSg",
+        authDomain: "library-gbooks.firebaseapp.com",
+        databaseURL: "https://library-gbooks.firebaseio.com",
+        projectId: "library-gbooks",
+        storageBucket: "library-gbooks.appspot.com",
+        messagingSenderId: "711620461645",
+        appId: "1:711620461645:web:30960c1528e1d23b018804",
+        measurementId: "G-4764X2PMJ0"
+    };
     firebase.initializeApp(firebaseConfig);
 
-    firebase.auth().signInWithCustomToken(token).then(function(){
-        console.log('sucesso!');
-    }).catch(function(error) {
-        console.log(error.message);
+    $('#inputSignIn').click(function(event) {
+        let email = $('#inputEmail').val();
+        let password = $('#inputPassword').val();
+        if (email && password) {
+            doAuth(email, password);
+        } else {
+            alert('Preencha o e-mail e senha');
+        }
     });
+
+    function doAuth(email, password) {
+        firebase.auth().signInWithEmailAndPassword(email, password).then(function(currentUser) {
+            sendIdToken(currentUser.user);
+        }).catch(function(error) {
+            alert(error.message);
+        });
+    }
+
+    function sendIdToken(currentUser) {
+        currentUser.getIdToken(/* forceRefresh */ true).then(function(idToken) {
+            requestTokenHeader(idToken);
+            window.location.reload(false); //TODO
+        }).catch(function(error) {
+            alert(error);
+        });
+    }
+
+    function requestTokenHeader(idToken) {
+        const myHeaders = new Headers();
+        myHeaders.append('Authorization-token', idToken);
+
+        return fetch('/books', {
+          method: 'GET',
+          headers: myHeaders,
+        })
+    }
+
+<!--    firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {-->
+<!--      // Handle Errors here.-->
+<!--      var errorCode = error.code;-->
+<!--      var errorMessage = error.message;-->
+<!--      // ...-->
+<!--    });-->
 
 </script>
 
