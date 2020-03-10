@@ -42,8 +42,27 @@
 <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
 <script src="https://npmcdn.com/bootstrap@4.0.0-alpha.5/dist/js/bootstrap.min.js"></script>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/twbs-pagination/1.4.1/jquery.twbsPagination.min.js'></script>
+
+<!--Firebase-->
+<script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
+
 <script th:inline="javascript">
 /*<![CDATA[*/
+  // Initialize Firebase
+  var firebaseConfig = {
+      apiKey: "AIzaSyABu9fd5I932JN68EjxPlcAAtsljoFQbSg",
+      authDomain: "library-gbooks.firebaseapp.com",
+      databaseURL: "https://library-gbooks.firebaseio.com",
+      projectId: "library-gbooks",
+      storageBucket: "library-gbooks.appspot.com",
+      messagingSenderId: "711620461645",
+      appId: "1:711620461645:web:30960c1528e1d23b018804",
+      measurementId: "G-4764X2PMJ0"
+  };
+  firebase.initializeApp(firebaseConfig);
+
   $('#pagination-demo').twbsPagination({
     totalPages: 6,
     visiblePages: 6,
@@ -59,52 +78,54 @@
   });
 
   function getBooksObjs(indexSearch) {
-      getOtherBooks(indexSearch);
-  }
-
-//TODO - refactor
-  function getOtherBooks(indexSearch) {
     let name = $('#nameSearch').val();
-    getBooksByNameAndIndex(indexSearch, name);
-  }
-
-  function getBooksByNameAndIndex(indexSearch, name) {
     let host =  /*[[${serverAddress}]]*/ '';
     let fullUrl = `http://${host}/books-by-index?name=${name}&index=${indexSearch}`;
+
     $.get(fullUrl, function(data) {
       let htmlContent = getHtmlByBooks(data);
       $('#page-content').html(htmlContent);
     });
   }
 
-  function getHtmlByBooks(books) {
-    let html =
-     `<div class="container">
-          <div class="row">`;
-            books.forEach(function(book) {
-              html += getHtml(book);
-            });
-     html +=
-          `</div>
-     </div>`;
+  async function getHtmlByBooks(books) {
+    let html = '';
+    const await allFavoritesIds = getAllFavoritesIds();
+
+    html += '<div class="container">';
+    html += '     <div class="row">';
+                   books.forEach(function(book) {
+    html +=          getItemGallery(book, allFavoritesIds);
+                   });
+    html += '    </div>'
+    html += '</div>';
 
     return html;
   }
 
-  function getHtml(book) {
+  function getItemGallery(book, allFavoritesIds) {
+    let html = '';
     let description = getDescriptionHtml(book.description);
 
-    return `
-    <div class="col-4 item-gallery" style="margin-bottom: 35px;">
-        <a href="#">ADD FAVORITE</a>
-        <div class="thumbnail">
-            <img src="${book.thumbnail}">
-            <div class="caption" style="margin: 5px;">
-                <h5>${book.title}</h5>
-                ${description}
-            </div>
-        </div>
-    </div>`;
+    html += '<div class="col-4 item-gallery" style="margin-bottom: 35px;">';
+    html += getAddOrRemoveFavorite($(book.id), allFavoritesIds);
+    html += ' <div class="thumbnail">';
+    html += `   <img src="${book.thumbnail}">`;
+    html += '   <div class="caption" style="margin: 5px;">';
+    html += `     <h5>${book.title}</h5>`;
+    html += `     ${description}`;
+    html += '   </div>';
+    html += ' </div>';
+    html += '</div>';
+
+    return html;
+  }
+
+  function getAddOrRemoveFavorite(idBook, allFavoritesIds) {
+    if (allFavoritesIds.includes(idBook)) {
+      return '<a href="#">REMOVE FAVORITE</a>';
+    }
+    return '<a href="#">ADD FAVORITE</a>';
   }
 
   function getDescriptionHtml(description) {
@@ -127,12 +148,24 @@
   $('#btn-search').click(function(item) {
     let page = $('.active a').html();
     let idxSearch = getIdxSearchByPage(page);
-    let name = $('#nameSearch').val();
-    getBooksByNameAndIndex(idxSearch, name);
+    getBooksObjs(idxSearch);
   });
 
   function getIdxSearchByPage(page) {
     return (page-1) + "0";
+  }
+
+  async function getAllFavoritesIds() {
+    let favorites = [];
+    let db = firebase.firestore();
+
+    db.collection("favorites").get().then(function(querySnapshot) {
+      querySnapshot.forEach(function(doc) {
+        favorites.push(doc.data());
+      });
+    });
+
+    return favorites;
   }
 
 
