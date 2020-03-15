@@ -71,61 +71,80 @@
     first: 'Primeiro',
     last: 'Último',
     onPageClick: function (event, page) {
-        //fetch content and render here
-        let indexSearch = getIdxSearchByPage(page);
-        getBooksObjs(indexSearch);
+      //fetch content and render here
+      let indexSearch = getIdxSearchByPage(page);
+      getHtmlByObjects(indexSearch).then(result => {
+        $('#page-content').html(result);
+      });
     }
   });
 
-  function getBooksObjs(indexSearch) {
+  async function getHtmlByObjects(indexSearch) {
     let name = $('#nameSearch').val();
     let host =  /*[[${serverAddress}]]*/ '';
     let fullUrl = `http://${host}/books-by-index?name=${name}&index=${indexSearch}`;
 
-    $.get(fullUrl, function(data) {
-      let htmlContent = getHtmlByBooks(data);
-      $('#page-content').html(htmlContent);
+    return new Promise(resolve => {
+      $.get(fullUrl, function(data) {
+        getHtmlByBooks(data).then(htmlContent => {
+          resolve(htmlContent);
+        });
+      });
     });
   }
 
   async function getHtmlByBooks(books) {
-    let html = '';
-    const await allFavoritesIds = getAllFavoritesIds();
+    return new Promise(resolve => {
+      let html = '';
+      let htmlItems = '';
 
-    html += '<div class="container">';
-    html += '     <div class="row">';
-                   books.forEach(function(book) {
-    html +=          getItemGallery(book, allFavoritesIds);
-                   });
-    html += '    </div>'
-    html += '</div>';
-
-    return html;
+      if (books.length === 0) {
+        resolve("");
+      } else {
+        books.forEach(function(book, index) {
+          getItemGallery(book).then(itemHtml => {
+            htmlItems += itemHtml;
+            if (index === books.length - 1) {
+              html += '<div class="container">'
+              html += '  <div class="row">';
+              html +=     htmlItems;
+              html += '  </div>'
+              html += '</div>';
+              resolve(html);
+            }
+          });
+        });
+      }
+    });
   }
 
-  function getItemGallery(book, allFavoritesIds) {
-    let html = '';
-    let description = getDescriptionHtml(book.description);
+  async function getItemGallery(book) {
+    return new Promise(resolve => {
+      firebase.firestore().collection("favorites").get().then(querySnapshot => {
+        let html = '';
+        let description = getDescriptionHtml(book.description);
+        let htmlRemoveOrAdd = '<a href="#">ADD FAVORITE</a>';
+        let idBookApp = book.id;
+        let idsBooksFb = [];
+        querySnapshot.forEach(doc => idsBooksFb.push(doc.data().book_id));
 
-    html += '<div class="col-4 item-gallery" style="margin-bottom: 35px;">';
-    html += getAddOrRemoveFavorite($(book.id), allFavoritesIds);
-    html += ' <div class="thumbnail">';
-    html += `   <img src="${book.thumbnail}">`;
-    html += '   <div class="caption" style="margin: 5px;">';
-    html += `     <h5>${book.title}</h5>`;
-    html += `     ${description}`;
-    html += '   </div>';
-    html += ' </div>';
-    html += '</div>';
+        if (idsBooksFb.includes(idBookApp)) {
+            htmlRemoveOrAdd = '<a href="#">REMOVE FAVORITE</a>';
+        }
+        html += '<div class="col-4 item-gallery" style="margin-bottom: 35px;">';
+        html += htmlRemoveOrAdd;
+        html += ' <div class="thumbnail">';
+        html += `   <img src="${book.thumbnail}">`;
+        html += '   <div class="caption" style="margin: 5px;">';
+        html += `     <h5>${book.title}</h5>`;
+        html += `     ${description}`;
+        html += '   </div>';
+        html += ' </div>';
+        html += '</div>';
 
-    return html;
-  }
-
-  function getAddOrRemoveFavorite(idBook, allFavoritesIds) {
-    if (allFavoritesIds.includes(idBook)) {
-      return '<a href="#">REMOVE FAVORITE</a>';
-    }
-    return '<a href="#">ADD FAVORITE</a>';
+        resolve(html);
+      });
+    });
   }
 
   function getDescriptionHtml(description) {
@@ -147,27 +166,16 @@
 
   $('#btn-search').click(function(item) {
     let page = $('.active a').html();
-    let idxSearch = getIdxSearchByPage(page);
-    getBooksObjs(idxSearch);
+    let indexSearch = getIdxSearchByPage(page);
+
+    getHtmlByObjects(indexSearch).then(result => {
+      $('#page-content').html(result);
+    });
   });
 
   function getIdxSearchByPage(page) {
     return (page-1) + "0";
   }
-
-  async function getAllFavoritesIds() {
-    let favorites = [];
-    let db = firebase.firestore();
-
-    db.collection("favorites").get().then(function(querySnapshot) {
-      querySnapshot.forEach(function(doc) {
-        favorites.push(doc.data());
-      });
-    });
-
-    return favorites;
-  }
-
 
 /*]]>*/
 </script>
