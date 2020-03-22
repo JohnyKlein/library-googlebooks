@@ -1,184 +1,195 @@
-<!DOCTYPE html>
 <html lang="pt-br" >
 <head>
   <meta charset="UTF-8">
   <title>Google Books Application</title>
-  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css'>
   <link rel="stylesheet" href="books.css">
+  <div th:insert="~{template :: styles}"></div>
 </head>
 <body>
-
-<!-- partial:index.partial.html -->
-<div class="main">
-  <div class="container">
-    <div class="row">
-      <div class="col-sm-8">
-        <label>Busca por: </label>
-        <input id="nameSearch" style="height: 100%; width: 650px;">
+  <div class="main">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-8">
+          <label>Busca por: </label>
+          <input id="nameSearch" style="height: 100%; width: 650px;">
+        </div>
+        <div class="col-sm-4" style=" text-align: left;">
+          <input id="btn-search" type="submit" value="buscar" style="height: 50px;">
+        </div>
+        <div class="col-sm-12">
+          <label>Total de resultados: </label>
+          <label></label>
+        </div>
       </div>
-      <div class="col-sm-4" style=" text-align: left;">
-        <input id="btn-search" type="submit" value="buscar" style="height: 50px;">
-      </div>
-      <div class="col-sm-12">
-        <label>Total de resultados: </label>
-        <label></label>
-      </div>
-    </div>
-    <div class="page-content">
-      <div class="col-md-12" id="page-content">
-        <!-- Dinamic Content Here -->
+      <div class="page-content">
+        <div class="col-md-12" id="page-content">
+          <!-- Dinamic Content Here -->
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- pages -->
-<div class="main">
-  <ul id="pagination-demo" class="pagination-sm"></ul>
-</div>
+  <!-- pagination -->
+  <div class="main">
+    <ul id="pagination-demo" class="pagination-sm"></ul>
+  </div>
 
-<!-- partial -->
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
-<script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
-<script src="https://npmcdn.com/bootstrap@4.0.0-alpha.5/dist/js/bootstrap.min.js"></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/twbs-pagination/1.4.1/jquery.twbsPagination.min.js'></script>
+  <!-- scripts -->
+  <div th:insert="~{template :: scripts}"></div>
+  
+  <script th:inline="javascript">
+  /*<![CDATA[*/
+    $('#pagination-demo').twbsPagination({
+      totalPages: 6,
+      visiblePages: 6,
+      next: 'Próximo',
+      prev: 'Anterior',
+      first: 'Primeiro',
+      last: 'Último',
+      onPageClick: function (event, page) {
+        //fetch content and render here
+        loadBooks(page);
+      }
+    });
 
-<!--Firebase-->
-<script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
+    function loadBooks(page = null) {
+        if (!page) page = $('.active .page-link').html();
+        let indexSearch = getIdxSearchByPage(page);
 
-<script th:inline="javascript">
-/*<![CDATA[*/
-  // Initialize Firebase
-  var firebaseConfig = {
-      apiKey: "AIzaSyABu9fd5I932JN68EjxPlcAAtsljoFQbSg",
-      authDomain: "library-gbooks.firebaseapp.com",
-      databaseURL: "https://library-gbooks.firebaseio.com",
-      projectId: "library-gbooks",
-      storageBucket: "library-gbooks.appspot.com",
-      messagingSenderId: "711620461645",
-      appId: "1:711620461645:web:30960c1528e1d23b018804",
-      measurementId: "G-4764X2PMJ0"
-  };
-  firebase.initializeApp(firebaseConfig);
+        getHtmlByObjects(indexSearch).then(result => {
+          $('#page-content').html(result);
+        });
+    }
 
-  $('#pagination-demo').twbsPagination({
-    totalPages: 6,
-    visiblePages: 6,
-    next: 'Próximo',
-    prev: 'Anterior',
-    first: 'Primeiro',
-    last: 'Último',
-    onPageClick: function (event, page) {
-      //fetch content and render here
+    async function getHtmlByObjects(indexSearch) {
+      let name = $('#nameSearch').val();
+      let host =  /*[[${serverAddress}]]*/ '';
+      let fullUrl = `http://${host}/books-by-index?name=${name}&index=${indexSearch}`;
+
+      return new Promise(resolve => {
+        $.get(fullUrl, function(data) {
+          getHtmlByBooks(data).then(htmlContent => {
+            resolve(htmlContent);
+          });
+        });
+      });
+    }
+
+    async function getHtmlByBooks(books) {
+      return new Promise(resolve => {
+        let html = '';
+        let htmlItems = '';
+
+        if (books.length === 0) {
+          resolve("");
+        } else {
+          books.forEach(function(book, index) {
+            getItemGallery(book).then(itemHtml => {
+              htmlItems += itemHtml;
+              if (index === books.length - 1) {
+                html += '<div class="container">'
+                html += '  <div class="row">';
+                html +=     htmlItems;
+                html += '  </div>'
+                html += '</div>';
+                resolve(html);
+              }
+            });
+          });
+        }
+      });
+    }
+
+    async function getItemGallery(book) {
+      return new Promise(resolve => {
+        firebase.firestore().collection("favorites").get().then(querySnapshot => {
+          let html = '';
+          let description = getDescriptionHtml(book.description);
+          let htmlRemoveOrAdd = `<button onclick="addFavoriteBook(\'${book.id}\')">(+) ADD FAVORITE</button>`;
+          let idBookApp = book.id;
+          let idsBooksFb = [];
+          querySnapshot.forEach(doc => idsBooksFb.push(doc.data().book_id));
+
+          if (idsBooksFb.includes(idBookApp)) {
+              htmlRemoveOrAdd = `<button onclick="removeFavoriteBook(\'${book.id}\')">(-) REMOVE FAVORITE</button>`;
+          }
+          html += '<div class="col-4 item-gallery" style="margin-bottom: 35px;">';
+          html += htmlRemoveOrAdd;
+          html += ' <div class="thumbnail">';
+          html += `   <img src="${book.thumbnail}">`;
+          html += '   <div class="caption" style="margin: 5px;">';
+          html += `     <h5>${book.title}</h5>`;
+          html += `     ${description}`;
+          html += '   </div>';
+          html += ' </div>';
+          html += '</div>';
+
+          resolve(html);
+        });
+      });
+    }
+
+    function getDescriptionHtml(description) {
+      description = capitalize(description);
+
+      if (description) {
+        return `<div class="col-12 text-left" style="padding:20px;">
+          <h6>Descrição:</h6>
+          <p>${description}</p>
+        </div>`;
+      }
+      return '';
+    }
+
+    function capitalize(s) {
+      if (typeof s !== 'string') return '';
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    $('#btn-search').click(function(item) {
+      let page = $('.active a').html();
       let indexSearch = getIdxSearchByPage(page);
+
       getHtmlByObjects(indexSearch).then(result => {
         $('#page-content').html(result);
       });
-    }
-  });
-
-  async function getHtmlByObjects(indexSearch) {
-    let name = $('#nameSearch').val();
-    let host =  /*[[${serverAddress}]]*/ '';
-    let fullUrl = `http://${host}/books-by-index?name=${name}&index=${indexSearch}`;
-
-    return new Promise(resolve => {
-      $.get(fullUrl, function(data) {
-        getHtmlByBooks(data).then(htmlContent => {
-          resolve(htmlContent);
-        });
-      });
     });
-  }
 
-  async function getHtmlByBooks(books) {
-    return new Promise(resolve => {
-      let html = '';
-      let htmlItems = '';
+    function getIdxSearchByPage(page) {
+      return (page-1) + "0";
+    }
 
-      if (books.length === 0) {
-        resolve("");
-      } else {
-        books.forEach(function(book, index) {
-          getItemGallery(book).then(itemHtml => {
-            htmlItems += itemHtml;
-            if (index === books.length - 1) {
-              html += '<div class="container">'
-              html += '  <div class="row">';
-              html +=     htmlItems;
-              html += '  </div>'
-              html += '</div>';
-              resolve(html);
-            }
+    function addFavoriteBook(bookId) {
+      db.collection("favorites").add({
+          book_id: bookId,
+          user_uid: firebase.auth().currentUser.uid
+      })
+      .then(function(docRef) {
+          loadBooks();
+          alert("Livro adicionado com sucesso!");
+      })
+      .catch(function(error) {
+          console.error("Error adding document: ", error);
+      });
+    }
+
+    function removeFavoriteBook(bookId) {
+      var query = db.collection('favorites').where('book_id', '==', bookId);
+      query.get().then(function(querySnapshot) {
+        querySnapshot.forEach(function(doc) {
+          doc.ref.delete()
+          .then(function(docRef) {
+              loadBooks();
+              alert("Livro removido com sucesso!");
+          })
+          .catch(function(error) {
+              console.error("Error to remove document: ", error);
           });
         });
-      }
-    });
-  }
-
-  async function getItemGallery(book) {
-    return new Promise(resolve => {
-      firebase.firestore().collection("favorites").get().then(querySnapshot => {
-        let html = '';
-        let description = getDescriptionHtml(book.description);
-        let htmlRemoveOrAdd = '<a href="#">ADD FAVORITE</a>';
-        let idBookApp = book.id;
-        let idsBooksFb = [];
-        querySnapshot.forEach(doc => idsBooksFb.push(doc.data().book_id));
-
-        if (idsBooksFb.includes(idBookApp)) {
-            htmlRemoveOrAdd = '<a href="#">REMOVE FAVORITE</a>';
-        }
-        html += '<div class="col-4 item-gallery" style="margin-bottom: 35px;">';
-        html += htmlRemoveOrAdd;
-        html += ' <div class="thumbnail">';
-        html += `   <img src="${book.thumbnail}">`;
-        html += '   <div class="caption" style="margin: 5px;">';
-        html += `     <h5>${book.title}</h5>`;
-        html += `     ${description}`;
-        html += '   </div>';
-        html += ' </div>';
-        html += '</div>';
-
-        resolve(html);
       });
-    });
-  }
-
-  function getDescriptionHtml(description) {
-    description = capitalize(description);
-
-    if (description) {
-      return `<div class="col-12 text-left" style="padding:20px;">
-        <h6>Descrição:</h6>
-        <p>${description}</p>
-      </div>`;
     }
-    return '';
-  }
 
-  function capitalize(s) {
-    if (typeof s !== 'string') return '';
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  $('#btn-search').click(function(item) {
-    let page = $('.active a').html();
-    let indexSearch = getIdxSearchByPage(page);
-
-    getHtmlByObjects(indexSearch).then(result => {
-      $('#page-content').html(result);
-    });
-  });
-
-  function getIdxSearchByPage(page) {
-    return (page-1) + "0";
-  }
-
-/*]]>*/
-</script>
-
+  /*]]>*/
+  </script>
 </body>
 </html>

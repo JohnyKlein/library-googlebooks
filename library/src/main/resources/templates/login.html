@@ -1,108 +1,86 @@
-<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <title>Google Books Application</title>
     <link rel="stylesheet" type="text/css" href="login.css">
-    <link rel="stylesheet" type="text/css" href="login-all.css">
-    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <div th:insert="~{template :: styles}"></div>
 </head>
 <body>
-<div class="container">
-    <div class="row">
-        <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
-            <div class="card card-signin my-5">
-                <div class="card-body">
-                    <h5 class="card-title text-center">Entrar</h5>
-                    <div class="form-signin">
-                        <div class="form-label-group">
-                            <input type="email" id="inputEmail" class="form-control" placeholder="endereço de e-mail" required autofocus>
-                            <label for="inputEmail">Endereço de e-mail</label>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+                <div class="card card-signin my-5">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Entrar</h5>
+                        <div class="form-signin">
+                            <div class="form-label-group">
+                                <input type="email" id="inputEmail" class="form-control" placeholder="endereço de e-mail" required autofocus>
+                                <label for="inputEmail">Endereço de e-mail</label>
+                            </div>
+                            <div class="form-label-group">
+                                <input type="password" id="inputPassword" class="form-control" placeholder="senha" required>
+                                <label for="inputPassword">Senha</label>
+                            </div>
+                            <button id="inputSignIn" class="btn btn-lg btn-primary btn-block text-uppercase" type="submit">Entrar</button>
+                            <hr class="my-4">
+                            <button class="btn btn-lg btn-google btn-block text-uppercase" type="submit">
+                                <i class="fab fa-google mr-2"></i>
+                                Sign in with Google
+                            </button>
                         </div>
-                        <div class="form-label-group">
-                            <input type="password" id="inputPassword" class="form-control" placeholder="senha" required>
-                            <label for="inputPassword">Senha</label>
-                        </div>
-                        <button id="inputSignIn" class="btn btn-lg btn-primary btn-block text-uppercase" type="submit">Entrar</button>
-                        <hr class="my-4">
-                        <button class="btn btn-lg btn-google btn-block text-uppercase" type="submit">
-                            <i class="fab fa-google mr-2"></i>
-                            Sign in with Google
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <!-- scripts -->
+    <div th:insert="~{template :: scripts}"></div>
+    
+    <script>
+        $('#inputSignIn').click(function(event) {
+            let email = $('#inputEmail').val();
+            let password = $('#inputPassword').val();
+            if (email && password) {
+                doAuth(email, password);
+            } else {
+                alert('Preencha o e-mail e senha');
+            }
+        });
 
-<!--Firebase-->
-<script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
-
-<script>
-    // Initialize Firebase
-    var firebaseConfig = {
-        apiKey: "AIzaSyABu9fd5I932JN68EjxPlcAAtsljoFQbSg",
-        authDomain: "library-gbooks.firebaseapp.com",
-        databaseURL: "https://library-gbooks.firebaseio.com",
-        projectId: "library-gbooks",
-        storageBucket: "library-gbooks.appspot.com",
-        messagingSenderId: "711620461645",
-        appId: "1:711620461645:web:30960c1528e1d23b018804",
-        measurementId: "G-4764X2PMJ0"
-    };
-    firebase.initializeApp(firebaseConfig);
-
-    $('#inputSignIn').click(function(event) {
-        let email = $('#inputEmail').val();
-        let password = $('#inputPassword').val();
-        if (email && password) {
-            doAuth(email, password);
-        } else {
-            alert('Preencha o e-mail e senha');
+        function doAuth(email, password) {
+            firebase.auth().signInWithEmailAndPassword(email, password).then(function(currentUser) {
+                sendIdToken(currentUser.user);
+            }).catch(function(error) {
+                alert(error.message);
+            });
         }
-    });
 
-    function doAuth(email, password) {
-        firebase.auth().signInWithEmailAndPassword(email, password).then(function(currentUser) {
-            sendIdToken(currentUser.user);
-        }).catch(function(error) {
-            alert(error.message);
-        });
-    }
+        function sendIdToken(currentUser) {
+            currentUser.getIdToken(/* forceRefresh */ true).then(function(idToken) {
+                requestTokenHeader(idToken);
+            }).catch(function(error) {
+                alert(error);
+            });
+        }
 
-    function sendIdToken(currentUser) {
-        currentUser.getIdToken(/* forceRefresh */ true).then(function(idToken) {
-            requestTokenHeader(idToken);
-        }).catch(function(error) {
-            alert(error);
-        });
-    }
+        function requestTokenHeader(idToken) {
+            $.ajax({
+                url: "/books",
+                type: "GET",
+                beforeSend: function(xhr){xhr.setRequestHeader('Authorization-token', idToken)},
+                success: function(){window.location.reload(false)}
+            });
+        }
 
-    function requestTokenHeader(idToken) {
-        $.ajax({
-            url: "/books",
-            type: "GET",
-            beforeSend: function(xhr){xhr.setRequestHeader('Authorization-token', idToken)},
-            success: function(){window.location.reload(false)}
-        });
-    }
-
-<!--    firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {-->
-<!--      // Handle Errors here.-->
-<!--      var errorCode = error.code;-->
-<!--      var errorMessage = error.message;-->
-<!--      // ...-->
-<!--    });-->
-
-</script>
-
+        function createUserByEmailAndPassword(email, password) {
+            firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {
+              // Handle Errors here.-->
+              var errorCode = error.code;
+              var errorMessage = error.message;
+              // ...-->
+            });
+        }
+    </script>
 </body>
 </html>
