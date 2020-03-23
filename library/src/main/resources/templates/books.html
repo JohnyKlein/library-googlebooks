@@ -3,31 +3,28 @@
   <meta charset="UTF-8">
   <title>Google Books Application</title>
   <link rel="stylesheet" href="books.css">
+  <link rel="stylesheet" href="search-bar.css">
   <div th:insert="~{template :: styles}"></div>
 </head>
 <body>
   <div class="main">
     <div class="container">
-      <div class="row">
-        <div class="col-sm-8">
-          <label>Busca por: </label>
-          <input id="nameSearch" style="height: 100%; width: 650px;">
-        </div>
-        <div class="col-sm-4" style=" text-align: left;">
-          <input id="btn-search" type="submit" value="buscar" style="height: 50px;">
-        </div>
+      <form class="search-container">
+        <input type="text" id="search-bar" placeholder="Qual livro você gostaria de encontrar?">
+        <label id="btn-search" style="display: inline;">
+          <img class="search-icon" src="http://www.endlessicons.com/wp-content/uploads/2012/12/search-icon.png">
+        </label>
+      </form>
+      <!--
         <div class="col-sm-12">
           <label>Total de resultados: </label>
           <label></label>
         </div>
-      </div>
+      -->
       <div class="page-content">
-        <div class="col-md-12" id="page-content">
-          <!-- Dinamic Content Here -->
-        </div>
+        <div class="col-md-12" id="page-content"></div>
       </div>
     </div>
-  </div>
 
   <!-- pagination -->
   <div class="main">
@@ -53,25 +50,29 @@
     });
 
     function loadBooks(page = null) {
-        if (!page) page = $('.active .page-link').html();
-        let indexSearch = getIdxSearchByPage(page);
+      if (!page) page = $('.active .page-link').html();
+      let indexSearch = getIdxSearchByPage(page);
 
-        getHtmlByObjects(indexSearch).then(result => {
-          $('#page-content').html(result);
-        });
+      getHtmlByObjects(indexSearch).then(result => {
+        $('#page-content').html(result);
+      });
     }
 
     async function getHtmlByObjects(indexSearch) {
-      let name = $('#nameSearch').val();
+      let name = $('#search-bar').val();
       let host =  /*[[${serverAddress}]]*/ '';
       let fullUrl = `http://${host}/books-by-index?name=${name}&index=${indexSearch}`;
 
       return new Promise(resolve => {
-        $.get(fullUrl, function(data) {
-          getHtmlByBooks(data).then(htmlContent => {
-            resolve(htmlContent);
+        if (!name) {
+          resolve('');
+        } else {
+          $.get(fullUrl, function(data) {
+            getHtmlByBooks(data).then(htmlContent => {
+              resolve(htmlContent);
+            });
           });
-        });
+        }
       });
     }
 
