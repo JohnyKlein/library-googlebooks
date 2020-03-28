@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Book {
+    private String id;
     private String title;
     private List<String> authors;
     private String publisher;
@@ -14,8 +15,9 @@ public class Book {
     private String description;
     private String thumbnail;
 
-    public Book(String title, List<String> authors, String publisher, String publishedDate, String description,
+    public Book(String id, String title, List<String> authors, String publisher, String publishedDate, String description,
                 String thumbnail) {
+        this.id = id;
         this.title = title;
         this.authors = authors;
         this.publisher = publisher;
@@ -24,9 +26,11 @@ public class Book {
         this.thumbnail = thumbnail;
     }
 
-    public String getTitle() {
-        return title;
+    public String getId() {
+        return id;
     }
+
+    public String getTitle() { return title; }
 
     public List<String> getAuthors() {
         return authors;
@@ -54,17 +58,33 @@ public class Book {
 
         if (items != null) {
             items.forEach(item -> {
-                HashMap<String, Object> volume = (HashMap<String, Object>) item.get("volumeInfo");
-                String title = (String) volume.get("title");
-                List<String> authors = (List<String>) volume.get("author");
-                String publisher = (String) volume.get("publisher");
-                String publishedDate = (String) volume.get("publishedDate");
-                String description = (String) volume.get("description");
-                String thumbnail = (String) ((HashMap<String, Object>) volume.get("imageLinks")).get("thumbnail");
-                books.add(new Book(title, authors, publisher, publishedDate, description, thumbnail));
+                try {
+                    String id = (String) item.get("id");
+                    HashMap<String, Object> volume = (HashMap<String, Object>) item.get("volumeInfo");
+                    String title = (String) volume.get("title");
+                    List<String> authors = (List<String>) volume.get("author");
+                    String publisher = (String) volume.get("publisher");
+                    String publishedDate = (String) volume.get("publishedDate");
+                    String description = (String) volume.get("description");
+                    String thumbnail = getThumbnail((HashMap<String, Object>) volume.get("imageLinks"));
+
+                    books.add(new Book(id, title, authors, publisher, publishedDate, description, thumbnail));
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                }
             });
         }
 
         return books;
+    }
+
+    private static String getThumbnail(HashMap<String, Object> volumeImage) {
+        if (volumeImage != null) {
+            if (volumeImage.get("thumbnail") != null) {
+                return (String) volumeImage.get("thumbnail");
+            }
+        }
+
+        return "";
     }
 }
