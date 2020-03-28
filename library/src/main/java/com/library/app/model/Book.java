@@ -58,18 +58,33 @@ public class Book {
 
         if (items != null) {
             items.forEach(item -> {
-                String id = (String) item.get("id");
-                HashMap<String, Object> volume = (HashMap<String, Object>) item.get("volumeInfo");
-                String title = (String) volume.get("title");
-                List<String> authors = (List<String>) volume.get("author");
-                String publisher = (String) volume.get("publisher");
-                String publishedDate = (String) volume.get("publishedDate");
-                String description = (String) volume.get("description");
-                String thumbnail = (String) ((HashMap<String, Object>) volume.get("imageLinks")).get("thumbnail");
-                books.add(new Book(id, title, authors, publisher, publishedDate, description, thumbnail));
+                try {
+                    String id = (String) item.get("id");
+                    HashMap<String, Object> volume = (HashMap<String, Object>) item.get("volumeInfo");
+                    String title = (String) volume.get("title");
+                    List<String> authors = (List<String>) volume.get("author");
+                    String publisher = (String) volume.get("publisher");
+                    String publishedDate = (String) volume.get("publishedDate");
+                    String description = (String) volume.get("description");
+                    String thumbnail = getThumbnail((HashMap<String, Object>) volume.get("imageLinks"));
+
+                    books.add(new Book(id, title, authors, publisher, publishedDate, description, thumbnail));
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                }
             });
         }
 
         return books;
+    }
+
+    private static String getThumbnail(HashMap<String, Object> volumeImage) {
+        if (volumeImage != null) {
+            if (volumeImage.get("thumbnail") != null) {
+                return (String) volumeImage.get("thumbnail");
+            }
+        }
+
+        return "";
     }
 }

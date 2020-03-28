@@ -10,13 +10,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
-
 
 @Controller
 public class BooksController {
-    private static final String URL_BASE_DELIMITADOR = "https://www.googleapis.com/books/v1/volumes?maxResults=10&q=";
     private static final String URL_BASE = "https://www.googleapis.com/books/v1/volumes?q=";
+    private static final String URL_BASE_DELIMITADOR = "https://www.googleapis.com/books/v1/volumes?maxResults=10&q=";
 
     @Autowired
     private Environment environment;
@@ -35,13 +36,24 @@ public class BooksController {
     @GetMapping("/books-by-index")
     @CrossOrigin
     @ResponseBody
-    public List<Book> listByNameAndIndex(@RequestParam(name="name") String name,
-                                         @RequestParam(name="index") String index) {
+    public List<Book> listByIndex(@RequestParam(name="name") String name,
+                                  @RequestParam(name="index") String index) {
         String fullAddress = URL_BASE_DELIMITADOR + name + "&startIndex=" + index;
         JSONObject response = getResponse(fullAddress);
         List<Book> books = Book.getBooksByResponse(response);
 
         return books;
+    }
+
+    @GetMapping("/books-total")
+    @CrossOrigin
+    @ResponseBody
+    private Integer getTotalSearch(@RequestParam(name="name") String name) {
+        String fullAddress = URL_BASE + name;
+        JSONObject response = getResponse(fullAddress);
+        Integer totalItems = (Integer) response.toMap().get("totalItems");
+
+        return totalItems;
     }
 
     private String getHostAndPort() {
@@ -51,16 +63,8 @@ public class BooksController {
         return address + ":" + port;
     }
 
-    private Integer getTotalSearch(String name) {
-        String fullAddress = URL_BASE + name;
-        JSONObject response = getResponse(fullAddress);
-        Integer totalItems = (Integer) response.toMap().get("totalItems");
-
-        return totalItems;
-    }
-
-    private JSONObject getResponse(String fullAddress) {
-        return Request.getRequest(fullAddress);
+    private JSONObject getResponse(String url) {
+        return Request.getRequest(url);
     }
 
 }

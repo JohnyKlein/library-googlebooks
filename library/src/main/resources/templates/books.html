@@ -9,18 +9,16 @@
 <body>
   <div class="main">
     <div class="container">
-      <form class="search-container">
+      <div class="search-container">
         <input type="text" id="search-bar" placeholder="Qual livro você gostaria de encontrar?">
         <label id="btn-search" style="display: inline;">
           <img class="search-icon" src="http://www.endlessicons.com/wp-content/uploads/2012/12/search-icon.png">
         </label>
-      </form>
-      <!--
-        <div class="col-sm-12">
-          <label>Total de resultados: </label>
-          <label></label>
-        </div>
-      -->
+      </div>
+      <div class="col-sm-12" id="total-books-group">
+        <label>Total de resultados: </label>
+        <label id="total-books-value"></label>
+      </div>
       <div class="page-content">
         <div class="col-md-12" id="page-content"></div>
       </div>
@@ -31,7 +29,7 @@
     <ul id="pagination-demo" class="pagination-sm"></ul>
   </div>
 
-  <!-- scripts -->
+  <!-- all scripts -->
   <div th:insert="~{template :: scripts}"></div>
   
   <script th:inline="javascript">
@@ -44,21 +42,29 @@
       first: 'Primeiro',
       last: 'Último',
       onPageClick: function (event, page) {
-        //fetch content and render here
         loadBooks(page);
       }
     });
 
     function loadBooks(page = null) {
       if (!page) page = $('.active .page-link').html();
-      let indexSearch = getIdxSearchByPage(page);
+      let indexSearch = getGoogleSearchIdxByPage(page);
 
-      getHtmlByObjects(indexSearch).then(result => {
+      getHtmlTotalBooks().then(result => {
+        if (result > 0) {
+          $('#total-books-value').html(result);
+          $('#total-books-group').removeAttr('hidden');
+        } else {
+          $('#total-books-group').attr('hidden');
+        }
+      });
+
+      getHtmlBooks(indexSearch).then(result => {
         $('#page-content').html(result);
       });
     }
 
-    async function getHtmlByObjects(indexSearch) {
+    async function getHtmlBooks(indexSearch) {
       let name = $('#search-bar').val();
       let host =  /*[[${serverAddress}]]*/ '';
       let fullUrl = `http://${host}/books-by-index?name=${name}&index=${indexSearch}`;
@@ -67,8 +73,8 @@
         if (!name) {
           resolve('');
         } else {
-          $.get(fullUrl, function(data) {
-            getHtmlByBooks(data).then(htmlContent => {
+          $.get(fullUrl, function(booksObjs) {
+            getHtmlByBooksObjs(booksObjs).then(htmlContent => {
               resolve(htmlContent);
             });
           });
@@ -76,7 +82,23 @@
       });
     }
 
-    async function getHtmlByBooks(books) {
+    async function getHtmlTotalBooks() {
+      let name = $('#search-bar').val();
+      let host =  /*[[${serverAddress}]]*/ '';
+      let fullUrl = `http://${host}/books-total?name=${name}`;
+
+      return new Promise(resolve => {
+        if (!name) {
+          resolve(0);
+        } else {
+          $.get(fullUrl, function(valueTotal) {
+            resolve(valueTotal);
+          });
+        }
+      });
+    }
+
+    async function getHtmlByBooksObjs(books) {
       return new Promise(resolve => {
         let html = '';
         let htmlItems = '';
@@ -85,7 +107,7 @@
           resolve("");
         } else {
           books.forEach(function(book, index) {
-            getItemGallery(book).then(itemHtml => {
+            getHtmlItemGallery(book).then(itemHtml => {
               htmlItems += itemHtml;
               if (index === books.length - 1) {
                 html += '<div class="container">'
@@ -101,11 +123,11 @@
       });
     }
 
-    async function getItemGallery(book) {
+    async function getHtmlItemGallery(book) {
       return new Promise(resolve => {
         firebase.firestore().collection("favorites").get().then(querySnapshot => {
           let html = '';
-          let description = getDescriptionHtml(book.description);
+          let description = getHtmlItemsDescription(book.description);
           let htmlRemoveOrAdd = `<button onclick="addFavoriteBook(\'${book.id}\')">(+) ADD FAVORITE</button>`;
           let idBookApp = book.id;
           let idsBooksFb = [];
@@ -130,15 +152,16 @@
       });
     }
 
-    function getDescriptionHtml(description) {
-      description = capitalize(description);
+    function getHtmlItemsDescription(txtDescription) {
+      txtDescription = capitalize(txtDescription);
 
-      if (description) {
+      if (txtDescription) {
         return `<div class="col-12 text-left" style="padding:20px;">
           <h6>Descrição:</h6>
-          <p>${description}</p>
+          <p>${txtDescription}</p>
         </div>`;
       }
+
       return '';
     }
 
@@ -147,16 +170,7 @@
       return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
-    $('#btn-search').click(function(item) {
-      let page = $('.active a').html();
-      let indexSearch = getIdxSearchByPage(page);
-
-      getHtmlByObjects(indexSearch).then(result => {
-        $('#page-content').html(result);
-      });
-    });
-
-    function getIdxSearchByPage(page) {
+    function getGoogleSearchIdxByPage(page) {
       return (page-1) + "0";
     }
 
@@ -170,7 +184,7 @@
           alert("Livro adicionado com sucesso!");
       })
       .catch(function(error) {
-          console.error("Error adding document: ", error);
+          console.error("Erro ao adicionar o documento: ", error);
       });
     }
 
@@ -189,6 +203,19 @@
         });
       });
     }
+
+    $('#search-bar').keypress(function(event) {
+      var keycode = (event.keyCode ? event.keyCode : event.which);
+      
+      //Verify enter event
+      if (keycode == '13') {
+        loadBooks();
+      }
+    });
+
+    $('#btn-search').click(function(item) {
+      loadBooks();
+    });
 
   /*]]>*/
   </script>
